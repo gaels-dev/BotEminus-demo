@@ -130,11 +130,26 @@ for i in range(total):
         with open("debug.html", "w", encoding="utf-8") as f:
             f.write(driver.page_source)
 
-        # Capturar títulos
-        titulos_act = driver.find_elements(By.CSS_SELECTOR, "h5.card-title")
-        tareas_actuales = [t.text.strip() for t in titulos_act if t.text.strip()]
+        # Capturar cada bloque de actividad
+        actividades = driver.find_elements(By.CSS_SELECTOR, "div.col-12.col-md-8")
+
+        tareas_actuales = []
+        for act in actividades:
+            try:
+                titulo = act.find_element(By.CSS_SELECTOR, "h5.card-title").text.strip()
+                # Buscar las fechas dentro de ese bloque
+                fechas = act.find_elements(By.CSS_SELECTOR, "div.detail-row .detail-value")
+                inicio = fechas[0].text.strip() if len(fechas) > 0 else "Sin fecha inicio"
+                fin = fechas[1].text.strip() if len(fechas) > 1 else "Sin fecha fin"
+
+                tareas_actuales.append(f"{titulo} (Inicia: {inicio} | Termina: {fin})")
+            except Exception:
+                continue
 
         print("📄 Tareas encontradas:", tareas_actuales)
+
+        # Volver al contexto principal
+        driver.switch_to.default_content()
 
     except Exception as e:
         print(f"Error en {nombre}: {repr(e)}")
